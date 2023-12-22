@@ -4,8 +4,8 @@ DifferentialDriveGuidance::DifferentialDriveGuidance(ModuleParams *parent) : Mod
 {
 	updateParams();
 
-	pid_init(&yaw_rate_pid, PID_MODE_DERIVATIV_NONE, 0.001f);
-	pid_init(&velocity_pid, PID_MODE_DERIVATIV_NONE, 0.001f);
+	pid_init(&_heading_pid, PID_MODE_DERIVATIV_NONE, 0.001f);
+	pid_init(&_velocity_pid, PID_MODE_DERIVATIV_NONE, 0.001f);
 }
 
 matrix::Vector2f DifferentialDriveGuidance::computeGuidance(const matrix::Vector2d &global_pos,
@@ -13,7 +13,7 @@ matrix::Vector2f DifferentialDriveGuidance::computeGuidance(const matrix::Vector
 		float vehicle_yaw, float body_velocity, float angular_velocity, float dt)
 {
 	const float distance_to_next_wp = get_distance_to_next_waypoint(global_pos(0), global_pos(1), current_waypoint(0),
-				    current_waypoint(1));
+					  current_waypoint(1));
 
 	float desired_heading = get_bearing_to_next_waypoint(global_pos(0), global_pos(1), current_waypoint(0),
 				current_waypoint(1));
@@ -25,6 +25,7 @@ matrix::Vector2f DifferentialDriveGuidance::computeGuidance(const matrix::Vector
 	_forwards_velocity_smoothing.updateDurations(max_velocity);
 	_forwards_velocity_smoothing.updateTraj(dt);
 
+	// The following logic below is here to make the rover stop when it arrives at the last waypoint or the RTL. As without this logic, the rover when arrived at the last waypoint will start to loiter and drive around in a weird manner.
 	if ((current_waypoint == next_waypoint) && distance_to_next_wp < _param_rdd_accepted_waypoint_radius.get()) {
 		currentState = GuidanceState::GOAL_REACHED;
 
@@ -63,8 +64,8 @@ matrix::Vector2f DifferentialDriveGuidance::computeGuidance(const matrix::Vector
 		break;
 	}
 
-	float speed_pid = pid_calculate(&velocity_pid, desired_speed, body_velocity, 0, dt);
-	float angular_velocity_pid = pid_calculate(&yaw_rate_pid, heading_error, angular_velocity, 0, dt);
+	float speed_pid = pid_calculate(&_velocity_pid, desired_speed, body_velocity, 0, dt);
+	float angular_velocity_pid = pid_calculate(&_heading_pid, heading_error, angular_velocity, 0, dt);
 
 	desired_speed += speed_pid;
 	_desired_angular_velocity += angular_velocity_pid;
@@ -79,17 +80,17 @@ void DifferentialDriveGuidance::updateParams()
 {
 	ModuleParams::updateParams();
 
-	pid_set_parameters(&yaw_rate_pid,
-			   _param_rdd_p_gain_yaw_rate.get(),  // Proportional gain
-			   _param_rdd_i_gain_yaw_rate.get(),  // Integral gain
-			   _param_rdd_d_gain_yaw_rate.get(),  // Derivative gain
+	pid_set_parameters(&_heading_pid,
+			   _param_rdd_p_gain_heading.get(),  // Proportional gain
+			   _param_rdd_i_gain_heading.get(),  // Integral gain
+			   0,  // Derivative gain
 			   20,  // Integral limit
 			   200);  // Output limit
 
-	pid_set_parameters(&velocity_pid,
+	pid_set_parameters(&_velocity_pid,
 			   _param_rdd_p_gain_speed.get(),  // Proportional gain
 			   _param_rdd_i_gain_speed.get(),  // Integral gain
-			   _param_rdd_d_gain_speed.get(),  // Derivative gain
+			   0,  // Derivative gain
 			   2,  // Integral limit
 			   200);  // Output limit
 

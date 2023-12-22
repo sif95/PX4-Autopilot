@@ -73,14 +73,14 @@ public:
 
 	/**
 	 * @brief Compute guidance for the vehicle.
-	 * @param global_pos The global position of the vehicle.
-	 * @param current_waypoint The current waypoint the vehicle is heading towards.
-	 * @param next_waypoint The next waypoint the vehicle will head towards after reaching the current waypoint.
-	 * @param vehicle_yaw The yaw orientation of the vehicle.
-	 * @param body_velocity The velocity of the vehicle.
-	 * @param angular_velocity The angular velocity of the vehicle.
-	 * @param dt The time step.
-	 * @return A 2D vector containing the computed guidance.
+	 * @param global_pos The global position of the vehicle in degrees.
+	 * @param current_waypoint The current waypoint the vehicle is heading towards in degrees.
+	 * @param next_waypoint The next waypoint the vehicle will head towards after reaching the current waypoint in degrees.
+	 * @param vehicle_yaw The yaw orientation of the vehicle in radians.
+	 * @param body_velocity The velocity of the vehicle in m/s.
+	 * @param angular_velocity The angular velocity of the vehicle in rad/s.
+	 * @param dt The time step in seconds.
+	 * @return A 2D vector containing the computed guidance (speed in m/s, yaw rate in rad/s).
 	 */
 	matrix::Vector2f computeGuidance(const matrix::Vector2d &global_pos, const matrix::Vector2d &current_waypoint,
 					 const matrix::Vector2d &next_waypoint, float vehicle_yaw,
@@ -88,16 +88,16 @@ public:
 
 	/**
 	 * @brief Set the maximum speed for the vehicle.
-	 * @param max_speed The maximum speed.
-	 * @return The set maximum speed.
+	 * @param max_speed The maximum speed in m/s.
+	 * @return The set maximum speed in m/s.
 	 */
 	float setMaxSpeed(float max_speed) { return _max_speed = max_speed; }
 
 
 	/**
 	 * @brief Set the maximum angular velocity for the vehicle.
-	 * @param max_angular_velocity The maximum angular velocity.
-	 * @return The set maximum angular velocity.
+	 * @param max_angular_velocity The maximum angular velocity in rad/s.
+	 * @return The set maximum angular velocity in rad/s.
 	 */
 	float setMaxAngularVelocity(float max_angular_velocity) { return _max_angular_velocity = max_angular_velocity; }
 
@@ -120,19 +120,15 @@ private:
 	VelocitySmoothing _forwards_velocity_smoothing; ///< The velocity smoothing for forward motion.
 	PositionSmoothing _position_smoothing; ///< The position smoothing.
 
-	PID_t yaw_rate_pid; ///< The PID controller for yaw rate.
-	PID_t velocity_pid; ///< The PID controller for velocity.
+	PID_t _heading_pid; ///< The PID controller for yaw rate.
+	PID_t _velocity_pid; ///< The PID controller for velocity.
 
 	DEFINE_PARAMETERS(
-		(ParamFloat<px4::params::RDD_P_YAW_RATE>) _param_rdd_p_gain_yaw_rate,
-		(ParamFloat<px4::params::RDD_I_YAW_RATE>) _param_rdd_d_gain_yaw_rate,
-		(ParamFloat<px4::params::RDD_D_YAW_RATE>) _param_rdd_i_gain_yaw_rate,
+		(ParamFloat<px4::params::RDD_P_HEADING>) _param_rdd_p_gain_heading,
+		(ParamFloat<px4::params::RDD_I_HEADING>) _param_rdd_i_gain_heading,
 		(ParamFloat<px4::params::RDD_P_SPEED>) _param_rdd_p_gain_speed,
 		(ParamFloat<px4::params::RDD_I_SPEED>) _param_rdd_i_gain_speed,
-		(ParamFloat<px4::params::RDD_D_SPEED>) _param_rdd_d_gain_speed,
 		(ParamFloat<px4::params::NAV_ACC_RAD>) _param_rdd_accepted_waypoint_radius,
-		(ParamFloat<px4::params::RDD_VEL_ALGN>) _param_rdd_velocity_alignment_subtraction,
-		(ParamFloat<px4::params::RDD_WAYPT_OFST>) _param_rdd_waypoint_offset,
 		(ParamFloat<px4::params::RDD_MAX_JERK>) _param_rdd_max_jerk,
 		(ParamFloat<px4::params::RDD_MAX_ACCEL>) _param_rdd_max_accel
 	)
