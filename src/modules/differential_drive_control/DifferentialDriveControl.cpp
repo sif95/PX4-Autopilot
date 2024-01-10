@@ -40,8 +40,7 @@ namespace differential_drive_control
 
 DifferentialDriveControl::DifferentialDriveControl() :
 	ModuleParams(nullptr),
-	ScheduledWorkItem(MODULE_NAME, px4::wq_configurations::rate_ctrl),
-	_differential_guidance_controller(this)
+	ScheduledWorkItem(MODULE_NAME, px4::wq_configurations::rate_ctrl)
 {
 	updateParams();
 }
@@ -118,8 +117,8 @@ void DifferentialDriveControl::Run()
 			_vehicle_attitude_sub.copy(&_vehicle_attitude);
 		}
 
-		if (_global_pos_sub.updated()) {
-			_global_pos_sub.copy(&_global_pos);
+		if (_vehicle_global_position_sub.updated()) {
+			_vehicle_global_position_sub.copy(&_vehicle_global_position);
 		}
 
 		if (_vehicle_angular_velocity_sub.updated()) {
@@ -130,21 +129,20 @@ void DifferentialDriveControl::Run()
 			_vehicle_local_position_sub.copy(&_vehicle_local_position);
 		}
 
-		if (_pos_sp_triplet_sub.updated()) {
-			_pos_sp_triplet_sub.copy(&_pos_sp_triplet);
+		if (_position_setpoint_triplet_sub.updated()) {
+			_position_setpoint_triplet_sub.copy(&_position_setpoint_triplet);
 		}
 
-		matrix::Vector2d global_pos(_global_pos.lat, _global_pos.lon);
-		matrix::Vector2d current_waypoint(_pos_sp_triplet.current.lat, _pos_sp_triplet.current.lon);
-		matrix::Vector2d next_waypoint(_pos_sp_triplet.next.lat, _pos_sp_triplet.next.lon);
+		matrix::Vector2d global_pos(_vehicle_global_position.lat, _vehicle_global_position.lon);
+		matrix::Vector2d current_waypoint(_position_setpoint_triplet.current.lat, _position_setpoint_triplet.current.lon);
+		matrix::Vector2d next_waypoint(_position_setpoint_triplet.next.lat, _position_setpoint_triplet.next.lon);
 
 		const float vehicle_yaw = matrix::Eulerf(matrix::Quatf(_vehicle_attitude.q)).psi();
 
 		matrix::Vector3f ground_speed(_vehicle_local_position.vx, _vehicle_local_position.vy,  _vehicle_local_position.vz);
 
-		// Velocity in body frame
-		const Dcmf R_to_body(Quatf(_vehicle_attitude.q).inversed());
-		const Vector3f velocity_in_body_frame = R_to_body * Vector3f(ground_speed(0), ground_speed(1), ground_speed(2));
+		// rotate the velocity vector from the local frame to the body frame
+		const Vector3f velocity_in_body_frame = Quatf(_vehicle_attitude.q).rotateVectorInverse(ground_speed);
 
 		matrix::Vector2f guidance_output =
 			_differential_guidance_controller.computeGuidance(

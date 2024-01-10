@@ -25,8 +25,8 @@ matrix::Vector2f DifferentialDriveGuidance::computeGuidance(const matrix::Vector
 	_forwards_velocity_smoothing.updateDurations(max_velocity);
 	_forwards_velocity_smoothing.updateTraj(dt);
 
-	// The following logic below is here to make the rover stop when it arrives at the last waypoint or the RTL. As without this logic, the rover when arrived at the last waypoint will start to loiter and drive around in a weird manner.
-	if ((current_waypoint == next_waypoint) && distance_to_next_wp < _param_rdd_accepted_waypoint_radius.get()) {
+	// Make rover stop when it arrives at the last waypoint instead of loitering and driving around weirdly.
+	if ((current_waypoint == next_waypoint) && distance_to_next_wp < _param_nav_acc_rad.get()) {
 		currentState = GuidanceState::GOAL_REACHED;
 
 	} else if (_next_waypoint != next_waypoint) {
@@ -51,7 +51,7 @@ matrix::Vector2f DifferentialDriveGuidance::computeGuidance(const matrix::Vector
 
 	case GuidanceState::DRIVING:
 		desired_speed = math::interpolate<float>(abs(heading_error), 0.1f, 0.2f,
-				_forwards_velocity_smoothing.getCurrentVelocity(), 0.2f);
+				_forwards_velocity_smoothing.getCurrentVelocity(), 0.0f);
 		break;
 
 	case GuidanceState::GOAL_REACHED:

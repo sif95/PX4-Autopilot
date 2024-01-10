@@ -92,7 +92,7 @@ parameters:
       RDD_MAX_JERK:
         description:
           short: Maximum jerk
-          long: Maximum jerk is used to limit the jerk of the rover
+          long: Limit for forwards acc/deceleration change.
         type: float
         unit: m/s^3
         min: 0

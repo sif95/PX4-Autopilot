@@ -128,7 +128,7 @@ private:
 		(ParamFloat<px4::params::RDD_I_HEADING>) _param_rdd_i_gain_heading,
 		(ParamFloat<px4::params::RDD_P_SPEED>) _param_rdd_p_gain_speed,
 		(ParamFloat<px4::params::RDD_I_SPEED>) _param_rdd_i_gain_speed,
-		(ParamFloat<px4::params::NAV_ACC_RAD>) _param_rdd_accepted_waypoint_radius,
+		(ParamFloat<px4::params::NAV_ACC_RAD>) _param_nav_acc_rad,
 		(ParamFloat<px4::params::RDD_MAX_JERK>) _param_rdd_max_jerk,
 		(ParamFloat<px4::params::RDD_MAX_ACCEL>) _param_rdd_max_accel
 	)

@@ -101,8 +101,8 @@ private:
 	uORB::Subscription _parameter_update_sub{ORB_ID(parameter_update)};
 	uORB::Subscription _vehicle_control_mode_sub{ORB_ID(vehicle_control_mode)};
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
-	uORB::Subscription _global_pos_sub{ORB_ID(vehicle_global_position)};
-	uORB::Subscription _pos_sp_triplet_sub{ORB_ID(position_setpoint_triplet)};
+	uORB::Subscription _vehicle_global_position_sub{ORB_ID(vehicle_global_position)};
+	uORB::Subscription _position_setpoint_triplet_sub{ORB_ID(position_setpoint_triplet)};
 	uORB::Subscription _vehicle_attitude_sub{ORB_ID(vehicle_attitude)};
 	uORB::Subscription _vehicle_angular_velocity_sub{ORB_ID(vehicle_angular_velocity)};
 	uORB::Subscription _vehicle_local_position_sub{ORB_ID(vehicle_local_position)};
@@ -112,9 +112,9 @@ private:
 	uORB::Publication<differential_drive_setpoint_s> _differential_drive_setpoint_pub{ORB_ID(differential_drive_setpoint)};
 
 	differential_drive_setpoint_s _differential_drive_setpoint{};
-	position_setpoint_triplet_s _pos_sp_triplet{};
+	position_setpoint_triplet_s _position_setpoint_triplet{};
 	vehicle_attitude_s _vehicle_attitude{};
-	vehicle_global_position_s _global_pos{};
+	vehicle_global_position_s _vehicle_global_position{};
 	vehicle_angular_velocity_s _vehicle_angular_velocity{};
 	vehicle_local_position_s _vehicle_local_position{};
 	bool _armed = false;
@@ -124,7 +124,7 @@ private:
 	hrt_abstime _time_stamp_last{0}; /**< time stamp when task was last updated */
 
 	DifferentialDriveKinematics _differential_drive_kinematics;
-	DifferentialDriveGuidance _differential_guidance_controller;
+	DifferentialDriveGuidance _differential_guidance_controller{this};
 
 	float _max_speed{0.f};
 	float _max_angular_velocity{0.f};
