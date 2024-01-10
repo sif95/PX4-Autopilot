@@ -4,8 +4,8 @@ DifferentialDriveGuidance::DifferentialDriveGuidance(ModuleParams *parent) : Mod
 {
 	updateParams();
 
-	pid_init(&_heading_pid, PID_MODE_DERIVATIV_NONE, 0.001f);
-	pid_init(&_velocity_pid, PID_MODE_DERIVATIV_NONE, 0.001f);
+	// pid_init(&_heading_pid, PID_MODE_DERIVATIV_NONE, 0.001f);
+	// pid_init(&_velocity_pid, PID_MODE_DERIVATIV_NONE, 0.001f);
 }
 
 matrix::Vector2f DifferentialDriveGuidance::computeGuidance(const matrix::Vector2d &global_pos,
@@ -27,6 +27,7 @@ matrix::Vector2f DifferentialDriveGuidance::computeGuidance(const matrix::Vector
 
 	// Make rover stop when it arrives at the last waypoint instead of loitering and driving around weirdly.
 	if ((current_waypoint == next_waypoint) && distance_to_next_wp < _param_nav_acc_rad.get()) {
+		// listen to mission result
 		currentState = GuidanceState::GOAL_REACHED;
 
 	} else if (_next_waypoint != next_waypoint) {
@@ -51,12 +52,12 @@ matrix::Vector2f DifferentialDriveGuidance::computeGuidance(const matrix::Vector
 
 	case GuidanceState::DRIVING:
 		desired_speed = math::interpolate<float>(abs(heading_error), 0.1f, 0.2f,
-				_forwards_velocity_smoothing.getCurrentVelocity(), 0.0f);
+				_forwards_velocity_smoothing.getCurrentVelocity(), 0.2f);
 		break;
 
 	case GuidanceState::GOAL_REACHED:
 		// temporary till I find a better way to stop the vehicle
-		desired_speed = 0.f;
+		desired_speed = 0.f + body_velocity - body_velocity + angular_velocity - angular_velocity;
 		body_velocity = 0.f;
 		heading_error = 0.f;
 		angular_velocity = 0.f;
@@ -64,35 +65,40 @@ matrix::Vector2f DifferentialDriveGuidance::computeGuidance(const matrix::Vector
 		break;
 	}
 
-	float speed_pid = pid_calculate(&_velocity_pid, desired_speed, body_velocity, 0, dt);
-	float angular_velocity_pid = pid_calculate(&_heading_pid, heading_error, angular_velocity, 0, dt);
+	// float speed_pid = pid_calculate(&_velocity_pid, desired_speed, body_velocity, 0, dt);
+	// float angular_velocity_pid = pid_calculate(&_heading_pid, heading_error, angular_velocity, 0, dt);
 
-	desired_speed += speed_pid;
-	_desired_angular_velocity += angular_velocity_pid;
+	// desired_speed += speed_pid;
+	// _desired_angular_velocity += angular_velocity_pid;
+
+	printf("desired_speed: %f\n", (double)desired_speed);
+	printf("heading_error: %f\n", (double)heading_error);
+	printf("\n");
 
 	output(0) = desired_speed;
-	output(1) = _desired_angular_velocity;
+	output(1) = heading_error;
 
-	return output / _max_speed;
+	// return output / _max_speed;
+	return output;
 }
 
 void DifferentialDriveGuidance::updateParams()
 {
 	ModuleParams::updateParams();
 
-	pid_set_parameters(&_heading_pid,
-			   _param_rdd_p_gain_heading.get(),  // Proportional gain
-			   _param_rdd_i_gain_heading.get(),  // Integral gain
-			   0,  // Derivative gain
-			   20,  // Integral limit
-			   200);  // Output limit
+	// pid_set_parameters(&_heading_pid,
+	// 		   _param_rdd_p_gain_heading.get(),  // Proportional gain
+	// 		   _param_rdd_i_gain_heading.get(),  // Integral gain
+	// 		   0,  // Derivative gain
+	// 		   20,  // Integral limit
+	// 		   200);  // Output limit
 
-	pid_set_parameters(&_velocity_pid,
-			   _param_rdd_p_gain_speed.get(),  // Proportional gain
-			   _param_rdd_i_gain_speed.get(),  // Integral gain
-			   0,  // Derivative gain
-			   2,  // Integral limit
-			   200);  // Output limit
+	// pid_set_parameters(&_velocity_pid,
+	// 		   _param_rdd_p_gain_speed.get(),  // Proportional gain
+	// 		   _param_rdd_i_gain_speed.get(),  // Integral gain
+	// 		   0,  // Derivative gain
+	// 		   2,  // Integral limit
+	// 		   200);  // Output limit
 
 	_forwards_velocity_smoothing.setMaxJerk(_param_rdd_max_jerk.get());
 	_forwards_velocity_smoothing.setMaxAccel(_param_rdd_max_accel.get());

@@ -62,12 +62,15 @@
 
 // Standard library includes
 #include <math.h>
+#include <lib/pid/pid.h>
 
 // Local includes
 #include <DifferentialDriveKinematics.hpp>
 #include <DifferentialDriveGuidance.hpp>
 
-static constexpr uint64_t kTimeoutUs = 500000; // Maximal time in microseconds before a loop or data times out
+using namespace time_literals;
+
+static constexpr uint64_t kTimeoutUs = 5000_ms; // Maximal time in microseconds before a loop or data times out
 
 namespace differential_drive_control
 {
@@ -96,7 +99,8 @@ protected:
 private:
 	void Run() override;
 
-	uORB::Subscription _differential_drive_setpoint_sub{ORB_ID(differential_drive_setpoint)};
+	uORB::Subscription _feed_forward_differential_drive_setpoint_sub{ORB_ID(feed_forward_differential_drive_setpoint)};
+	uORB::Subscription _closed_loop_differential_drive_setpoint_sub{ORB_ID(closed_loop_differential_drive_setpoint)};
 	uORB::Subscription _manual_control_setpoint_sub{ORB_ID(manual_control_setpoint)};
 	uORB::Subscription _parameter_update_sub{ORB_ID(parameter_update)};
 	uORB::Subscription _vehicle_control_mode_sub{ORB_ID(vehicle_control_mode)};
@@ -109,7 +113,8 @@ private:
 
 
 	uORB::PublicationMulti<actuator_motors_s> _actuator_motors_pub{ORB_ID(actuator_motors)};
-	uORB::Publication<differential_drive_setpoint_s> _differential_drive_setpoint_pub{ORB_ID(differential_drive_setpoint)};
+	uORB::Publication<differential_drive_setpoint_s> _feed_forward_differential_drive_setpoint_pub{ORB_ID(feed_forward_differential_drive_setpoint)};
+	uORB::Publication<differential_drive_setpoint_s> _closed_loop_differential_drive_setpoint_pub{ORB_ID(closed_loop_differential_drive_setpoint)};
 
 	differential_drive_setpoint_s _differential_drive_setpoint{};
 	position_setpoint_triplet_s _position_setpoint_triplet{};
@@ -129,7 +134,14 @@ private:
 	float _max_speed{0.f};
 	float _max_angular_velocity{0.f};
 
+	PID_t _heading_pid; ///< The PID controller for yaw rate.
+	PID_t _velocity_pid; ///< The PID controller for velocity.
+
 	DEFINE_PARAMETERS(
+		(ParamFloat<px4::params::RDD_P_HEADING>) _param_rdd_p_gain_heading,
+		(ParamFloat<px4::params::RDD_I_HEADING>) _param_rdd_i_gain_heading,
+		(ParamFloat<px4::params::RDD_P_SPEED>) _param_rdd_p_gain_speed,
+		(ParamFloat<px4::params::RDD_I_SPEED>) _param_rdd_i_gain_speed,
 		(ParamFloat<px4::params::RDD_SPEED_SCALE>) _param_rdd_speed_scale,
 		(ParamFloat<px4::params::RDD_ANG_SCALE>) _param_rdd_ang_velocity_scale,
 		(ParamFloat<px4::params::RDD_WHL_SPEED>) _param_rdd_max_wheel_speed,

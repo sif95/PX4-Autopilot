@@ -43,6 +43,9 @@ DifferentialDriveControl::DifferentialDriveControl() :
 	ScheduledWorkItem(MODULE_NAME, px4::wq_configurations::rate_ctrl)
 {
 	updateParams();
+
+	pid_init(&_heading_pid, PID_MODE_DERIVATIV_NONE, 0.001f);
+	pid_init(&_velocity_pid, PID_MODE_DERIVATIV_NONE, 0.001f);
 }
 
 bool DifferentialDriveControl::init()
@@ -54,6 +57,21 @@ bool DifferentialDriveControl::init()
 void DifferentialDriveControl::updateParams()
 {
 	ModuleParams::updateParams();
+
+	pid_set_parameters(&_heading_pid,
+			   _param_rdd_p_gain_heading.get(),  // Proportional gain
+			   _param_rdd_i_gain_heading.get(),  // Integral gain
+			   0,  // Derivative gain
+			   20,  // Integral limit
+			   200);  // Output limit
+
+	pid_set_parameters(&_velocity_pid,
+			   _param_rdd_p_gain_speed.get(),  // Proportional gain
+			   _param_rdd_i_gain_speed.get(),  // Integral gain
+			   0,  // Derivative gain
+			   2,  // Integral limit
+			   200);  // Output limit
+
 	_max_speed = _param_rdd_max_wheel_speed.get() * _param_rdd_wheel_radius.get();
 	_max_angular_velocity = _max_speed / (_param_rdd_wheel_base.get() / 2.f);
 
@@ -93,6 +111,34 @@ void DifferentialDriveControl::Run()
 		}
 	}
 
+	// subscriptions are in here for now, because we only need them in mission mode, later if we want to use them for manual mode, we can move them out
+	if (_vehicle_attitude_sub.updated()) {
+		_vehicle_attitude_sub.copy(&_vehicle_attitude);
+	}
+
+	if (_vehicle_global_position_sub.updated()) {
+		_vehicle_global_position_sub.copy(&_vehicle_global_position);
+	}
+
+	if (_vehicle_angular_velocity_sub.updated()) {
+		_vehicle_angular_velocity_sub.copy(&_vehicle_angular_velocity);
+	}
+
+	if (_vehicle_local_position_sub.updated()) {
+		_vehicle_local_position_sub.copy(&_vehicle_local_position);
+	}
+
+	if (_position_setpoint_triplet_sub.updated()) {
+		_position_setpoint_triplet_sub.copy(&_position_setpoint_triplet);
+	}
+
+	const float vehicle_yaw = matrix::Eulerf(matrix::Quatf(_vehicle_attitude.q)).psi();
+
+	matrix::Vector3f ground_speed(_vehicle_local_position.vx, _vehicle_local_position.vy,  _vehicle_local_position.vz);
+
+	// rotate the velocity vector from the local frame to the body frame
+	const Vector3f velocity_in_body_frame = Quatf(_vehicle_attitude.q).rotateVectorInverse(ground_speed);
+
 	if (_manual_driving) {
 		// Manual mode
 		// directly produce setpoints from the manual control setpoint (joystick)
@@ -104,7 +150,7 @@ void DifferentialDriveControl::Run()
 				_differential_drive_setpoint.speed = manual_control_setpoint.throttle * _param_rdd_speed_scale.get() * _max_speed;
 				_differential_drive_setpoint.yaw_rate = manual_control_setpoint.roll * _param_rdd_ang_velocity_scale.get() *
 									_max_angular_velocity;
-				_differential_drive_setpoint_pub.publish(_differential_drive_setpoint);
+				_feed_forward_differential_drive_setpoint_pub.publish(_differential_drive_setpoint);
 			}
 		}
 
@@ -112,37 +158,39 @@ void DifferentialDriveControl::Run()
 		// Mission mode
 		// directly receive setpoints from the guidance library
 
-		// subscriptions are in here for now, because we only need them in mission mode, later if we want to use them for manual mode, we can move them out
-		if (_vehicle_attitude_sub.updated()) {
-			_vehicle_attitude_sub.copy(&_vehicle_attitude);
-		}
+		// // subscriptions are in here for now, because we only need them in mission mode, later if we want to use them for manual mode, we can move them out
+		// if (_vehicle_attitude_sub.updated()) {
+		// 	_vehicle_attitude_sub.copy(&_vehicle_attitude);
+		// }
 
-		if (_vehicle_global_position_sub.updated()) {
-			_vehicle_global_position_sub.copy(&_vehicle_global_position);
-		}
+		// if (_vehicle_global_position_sub.updated()) {
+		// 	_vehicle_global_position_sub.copy(&_vehicle_global_position);
+		// }
 
-		if (_vehicle_angular_velocity_sub.updated()) {
-			_vehicle_angular_velocity_sub.copy(&_vehicle_angular_velocity);
-		}
+		// if (_vehicle_angular_velocity_sub.updated()) {
+		// 	_vehicle_angular_velocity_sub.copy(&_vehicle_angular_velocity);
+		// }
 
-		if (_vehicle_local_position_sub.updated()) {
-			_vehicle_local_position_sub.copy(&_vehicle_local_position);
-		}
+		// if (_vehicle_local_position_sub.updated()) {
+		// 	_vehicle_local_position_sub.copy(&_vehicle_local_position);
+		// }
 
-		if (_position_setpoint_triplet_sub.updated()) {
-			_position_setpoint_triplet_sub.copy(&_position_setpoint_triplet);
-		}
+		// if (_position_setpoint_triplet_sub.updated()) {
+		// 	_position_setpoint_triplet_sub.copy(&_position_setpoint_triplet);
+		// }
 
 		matrix::Vector2d global_pos(_vehicle_global_position.lat, _vehicle_global_position.lon);
 		matrix::Vector2d current_waypoint(_position_setpoint_triplet.current.lat, _position_setpoint_triplet.current.lon);
 		matrix::Vector2d next_waypoint(_position_setpoint_triplet.next.lat, _position_setpoint_triplet.next.lon);
 
-		const float vehicle_yaw = matrix::Eulerf(matrix::Quatf(_vehicle_attitude.q)).psi();
+		// const float vehicle_yaw = matrix::Eulerf(matrix::Quatf(_vehicle_attitude.q)).psi();
 
-		matrix::Vector3f ground_speed(_vehicle_local_position.vx, _vehicle_local_position.vy,  _vehicle_local_position.vz);
+		// matrix::Vector3f ground_speed(_vehicle_local_position.vx, _vehicle_local_position.vy,  _vehicle_local_position.vz);
 
-		// rotate the velocity vector from the local frame to the body frame
-		const Vector3f velocity_in_body_frame = Quatf(_vehicle_attitude.q).rotateVectorInverse(ground_speed);
+		// // rotate the velocity vector from the local frame to the body frame
+		// const Vector3f velocity_in_body_frame = Quatf(_vehicle_attitude.q).rotateVectorInverse(ground_speed);
+
+		printf("in mission mode\n");
 
 		matrix::Vector2f guidance_output =
 			_differential_guidance_controller.computeGuidance(
@@ -158,16 +206,30 @@ void DifferentialDriveControl::Run()
 		_differential_drive_setpoint.timestamp = now;
 		_differential_drive_setpoint.speed = guidance_output(0);
 		_differential_drive_setpoint.yaw_rate = guidance_output(1);
-		_differential_drive_setpoint_pub.publish(_differential_drive_setpoint);
+		_feed_forward_differential_drive_setpoint_pub.publish(_differential_drive_setpoint);
 
 	}
 
-	_differential_drive_setpoint_sub.update(&_differential_drive_setpoint);
+	_feed_forward_differential_drive_setpoint_sub.update(&_differential_drive_setpoint);
+
+	// Controller /////////////////////////////////
+	// if ()
+	float speed_pid = pid_calculate(&_velocity_pid, _differential_drive_setpoint.speed, velocity_in_body_frame(0), 0, dt);
+	float angular_velocity_pid = pid_calculate(&_heading_pid, _differential_drive_setpoint.yaw_rate,
+				     _vehicle_angular_velocity.xyz[2], 0, dt);
+
+	printf("_diff_drive_setpoint.speed: %f, _diff_drive_setpoint.yaw_rate: %f\n",
+	       (double)_differential_drive_setpoint.speed, (double)_differential_drive_setpoint.yaw_rate);
+	printf("speed_pid: %f, angular_velocity_pid: %f\n", (double)speed_pid, (double)angular_velocity_pid);
+
+	printf("\n");
+
+	// 2 setpoints, one of setpoints will be closed loop and one will be open loop / feed forwars
 
 	// get the wheel speeds from the inverse kinematics class (DifferentialDriveKinematics)
 	Vector2f wheel_speeds = _differential_drive_kinematics.computeInverseKinematics(
-					_differential_drive_setpoint.speed,
-					_differential_drive_setpoint.yaw_rate);
+					speed_pid,
+					angular_velocity_pid);
 
 	// Check if max_angular_wheel_speed is zero
 	const bool setpoint_timeout = (_differential_drive_setpoint.timestamp + 100_ms) < now;
