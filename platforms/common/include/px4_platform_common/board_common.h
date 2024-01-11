@@ -269,6 +269,16 @@
 #  define HW_VER_REV(v,r)       ((uint32_t)((v) & 0xffff) << 16) | ((uint32_t)(r) & 0xffff)
 #endif
 
+#if defined(BOARD_HAS_HW_SPLIT_VERSIONING)
+typedef uint16_t hw_fmun_id_t;
+typedef uint16_t hw_base_id_t;
+// Original Signals GPIO_HW_REV_SENSE/GPIO_HW_VER_REV_DRIVE is used to ID the FMUM
+// Original Signals GPIO_HW_VER_SENSE/GPIO_HW_VER_REV_DRIVE is used to ID the BASE
+#  define BOARD_HAS_VERSIONING 1
+#  define HW_FMUM_ID(rev)       ((hw_fmun_id_t)(rev) & 0xffff)
+#  define HW_BASE_ID(ver)       ((hw_base_id_t)((ver) & 0xffff))
+#endif
+
 #define HW_INFO_REV_DIGITS    3
 #define HW_INFO_VER_DIGITS    3
 
