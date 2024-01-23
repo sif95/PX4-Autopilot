@@ -1,0 +1,125 @@
+#!/bin/sh
+#
+# @name Nimbus Mesher Black
+#
+# @type Quadrotor x
+# @class Copter
+#
+# @maintainer Efe Camci <efe_camci@i2r.a-star.edu.sg>
+# @maintainer Mohammad Asif <mohammad_asif_bin_abdul_sahid@i2r.a-star.edu.sg>
+#
+
+
+
+. ${R}etc/init.d/rc.mc_defaults
+
+param set-default CA_ROTOR_COUNT 4
+param set-default CA_ROTOR0_PX 0.15
+param set-default CA_ROTOR0_PY 0.15
+param set-default CA_ROTOR1_PX -0.15
+param set-default CA_ROTOR1_PY -0.15
+param set-default CA_ROTOR2_PX 0.15
+param set-default CA_ROTOR2_PY -0.15
+param set-default CA_ROTOR2_KM -0.05
+param set-default CA_ROTOR3_PX -0.15
+param set-default CA_ROTOR3_PY 0.15
+param set-default CA_ROTOR3_KM -0.05
+
+# multicopter attitude control
+param set MC_YAWRATE_MAX 30.0
+param set MC_YAWRATE_P 0.25
+param set MC_YAW_P 4.0
+
+# multicopter position control
+param set MCP_YAWRAUTO_MAX 30.0
+param set MPC_LAND_SPEED 0.5
+param set MPC_MAN_TILT_MAX 20.0
+param set MPC_MAN_Y_MAX 60.0
+param set MPC_TILTMAX_AIR 20.0
+param set MPC_TKO_SPEED 0.50
+param set MPC_VEL_MANUAL 1.00
+param set MPC_XY_CRUISE 0.50
+param set MPC_XY_VEL_MAX 1.0
+param set MPC_YAWRAUTO_MA 30.0
+param set MPC_Z_VEL_MAX_DN 0.5
+param set MPC_Z_VEL_MAX_UP 0.5
+param set MPC_Z_V_AUTO_DN 0.5
+param set MPC_Z_V_AUTO_UP 0.5
+#param set MPC_XY_VEL_P_ACC 2.80
+#param set MPC_XY_VEL_D_ACC 0.250
+#param set MPC_Z_VEL_P_ACC 5.00
+
+# vision position and yaw fusion only
+param set EKF2_AID_MASK 24
+param set EKF2_EV_NOISE_MD 1
+param set EKF2_EVA_NOISE 0.05
+param set EKF2_EVP_NOISE 0.1
+param set EKF2_TAU_POS 0.25
+param set EKF2_HGT_MODE 3
+param set EKF2_RNG_AID 0
+param set EKF2_ASP_DELAY 0
+param set EKF2_AVEL_DELAY 0
+param set EKF2_BARO_DELAY 0
+param set EKF2_GPS_DELAY 0
+param set EKF2_MAG_DELAY 0
+param set EKF2_OFF_DELAY 0
+param set EKF2_RNG_DELAY 0
+# param set EKF2_EV_DELAY 0.0
+
+# optical flow param
+# param set EKF2_OF_POS_X 0.08
+# param set EKF2_OF_POS_Y -0.03
+# param set EKF2_OF_POS_Z -0.02
+# param set SENS_FLOW_MAXHGT 5.0
+# param set SENS_FLOW_MAXR 7.40
+# param set SENS_FLOW_MINHGT 0.1
+# param set SENS_FLOW_ROT 0
+# param set UAVCAN_ENABLE 2
+# param set UAVCAN_SUB_FLOW 1
+
+# disable fusion of landing target velocity
+param set LTEST_MODE 0
+
+# failsafe
+param set COM_OBL_RC_ACT 4
+param set NAV_RCL_ACT 3
+param set RTL_DESCEND_ALT 2.0
+param set RTL_MIN_DIST 2.0
+param set RTL_RETURN_ALT 2.0
+param set PLD_SRCH_ALT 2.0
+
+# sensors / comms
+param set SENS_EN_IRLOCK 1
+param set SENS_EN_SF1XX 5
+param set SER_TEL1_BAUD 921600
+param set TEL_FRSKY_CONFIG 102
+param set DSHOT_CONFIG 600
+
+# mavlink streams
+mavlink start -d /dev/ttyS0 -b 921600
+mavlink start -d /dev/ttyACM0 -b 921600
+
+# start up Landing Target Estimator module
+landing_target_estimator start
+
+# adjust stream rates
+mavlink stream -d /dev/ttyS0 -s ACTUATOR_CONTROL_TARGET -r 0
+mavlink stream -d /dev/ttyS0 -s ATTITUDE -r 1000
+mavlink stream -d /dev/ttyS0 -s ALTITUDE -r 0
+mavlink stream -d /dev/ttyS0 -s ATTITUDE_TARGET -r 0
+mavlink stream -d /dev/ttyS0 -s HIGHRES_IMU -r 1000
+mavlink stream -d /dev/ttyS0 -s LOCAL_POSITION_NED -r 1000
+mavlink stream -d /dev/ttyS0 -s ODOMETRY -r 0
+mavlink stream -d /dev/ttyS0 -s SCALED_IMU -r 1000
+mavlink stream -d /dev/ttyS0 -s SCALED_IMU2 -r 1000
+mavlink stream -d /dev/ttyS0 -s SCALED_IMU3 -r 1000
+mavlink stream -d /dev/ttyS0 -s SERVO_OUTPUT_RAW -r 0
+mavlink stream -d /dev/ttyS0 -s TIMESYNC -r 0
+mavlink stream -d /dev/ttyS0 -s VFR_HUD -r 0
+mavlink stream -d /dev/ttyS0 -s LANDING_TARGET -r 0
+mavlink stream -d /dev/ttyS0 -s ATTITUDE_QUATERNION -r 0
+mavlink stream -d /dev/ttyS0 -s ACTUAT0R_CONTROL_TARGET -r 0
+mavlink stream -d /dev/ttyS0 -s DISTANCE_SENSOR -r 0
+mavlink stream -d /dev/ttyS0 -s RC_CHANNELS -r 60
+
+

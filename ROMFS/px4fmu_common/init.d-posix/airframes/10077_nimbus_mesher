@@ -1,0 +1,61 @@
+#!/bin/sh
+# @project TeDRO
+# @name Nimbus Mesher Drone SITL. Gazebo Only.
+#
+# @type Quadrotor X
+#
+# @maintainer Nursultan Imanberdiyev <nursultan_imanberdiyev@i2r.a-star.edu.sg>
+# @maintainer Efe Camci <efe_camci@i2r.a-star.edu.sg>
+
+. ${R}etc/init.d/rc.mc_defaults
+
+# if [ $AUTOCNF = yes ]
+# then
+# 	param set MC_PITCHRATE_P 0.1
+# 	param set MC_ROLLRATE_P 0.1
+# fi
+
+set MIXER quad_x
+
+param set MC_ROLLRATE_P 0.05
+param set MC_ROLLRATE_I 0.2
+param set MC_ROLLRATE_D 0.003
+
+param set MC_PITCHRATE_P 0.1
+param set MC_PITCHRATE_I 0.2
+param set MC_PITCHRATE_D 0.003
+
+param set MC_YAWRATE_P 0.2
+param set MC_YAWRATE_I 0.1
+param set MC_YAWRATE_D 0.0
+
+param set MC_YAWRATE_MAX 30.0
+
+# enable offboard without RC
+param set COM_RCL_EXCEPT 4
+
+# vision position and yaw fusion only
+param set EKF2_AID_MASK 24
+param set EKF2_EV_DELAY 50.0
+param set EKF2_HGT_MODE 3
+param set EKF2_RNG_AID 0
+
+# disable fusion of landing target velocity
+param set LTEST_MODE 0
+param set PLD_HACC_RAD 0.1
+
+# failsafe related
+param set COM_OBL_RC_ACT 4
+param set NAV_RCL_ACT 3
+param set RTL_DESCEND_ALT 2.0
+param set RTL_MIN_DIST 2.0
+param set RTL_RETURN_ALT 2.0
+param set PLD_SRCH_ALT 2.0
+
+# start up Landing Target Estimator module
+landing_target_estimator start
+
+# adjust stream rates
+mavlink start -u 14557
+
+mavlink stream -r 1000 -s DISTANCE_SENSOR -u 14557

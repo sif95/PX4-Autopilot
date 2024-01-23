@@ -37,6 +37,7 @@ px4_add_romfs_files(
 	10018_iris_foggy_lidar
 	10020_if750a
 	10030_px4vision
+	10077_nimbus_mesher
 	1010_iris_opt_flow
 	1010_iris_opt_flow.post
 	1011_iris_irlock

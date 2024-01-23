@@ -1,0 +1,75 @@
+#!/bin/sh
+#
+# @name Nimbus Mesher Orange
+#
+# @type Quadrotor x
+# @class Copter
+#
+# @maintainer Efe Camci <efe_camci@i2r.a-star.edu.sg>
+# @maintainer Mohammad Asif <mohammad_asif_bin_abdul_sahid@i2r.a-star.edu.sg>
+#
+
+
+
+. ${R}etc/init.d/rc.mc_defaults
+
+param set-default CA_ROTOR_COUNT 4
+param set-default CA_ROTOR0_PX 0.15
+param set-default CA_ROTOR0_PY 0.15
+param set-default CA_ROTOR1_PX -0.15
+param set-default CA_ROTOR1_PY -0.15
+param set-default CA_ROTOR2_PX 0.15
+param set-default CA_ROTOR2_PY -0.15
+param set-default CA_ROTOR2_KM -0.05
+param set-default CA_ROTOR3_PX -0.15
+param set-default CA_ROTOR3_PY 0.15
+param set-default CA_ROTOR3_KM -0.05
+
+# vision position and yaw fusion only
+param set EKF2_AID_MASK 24
+param set EKF2_EV_DELAY 50.0
+param set EKF2_HGT_MODE 3
+param set EKF2_RNG_AID 0
+
+# disable fusion of landing target velocity
+param set LTEST_MODE 0
+
+# failsafe
+param set COM_OBL_RC_ACT 4
+param set NAV_RCL_ACT 3
+param set RTL_DESCEND_ALT 2.0
+param set RTL_MIN_DIST 2.0
+param set RTL_RETURN_ALT 2.0
+param set PLD_SRCH_ALT 2.0
+
+# sensors / comms
+param set SENS_EN_IRLOCK 1
+param set SENS_EN_SF1XX 5
+param set SER_TEL1_BAUD 921600
+param set TEL_FRSKY_CONFIG 102
+
+# mavlink streams
+mavlink start -d /dev/ttyS0 -b 921600
+mavlink start -d /dev/ttyACM0 -b 921600
+
+# start up Landing Target Estimator module
+landing_target_estimator start
+
+# adjust stream rates
+mavlink stream -d /dev/ttyS0 -s ACTUATOR_CONTROL_TARGET -r 0
+mavlink stream -d /dev/ttyS0 -s ATTITUDE -r 1000
+mavlink stream -d /dev/ttyS0 -s ALTITUDE -r 1000
+mavlink stream -d /dev/ttyS0 -s ATTITUDE_TARGET -r 0
+mavlink stream -d /dev/ttyS0 -s HIGHRES_IMU -r 0
+mavlink stream -d /dev/ttyS0 -s LOCAL_POSITION_NED -r 1000
+mavlink stream -d /dev/ttyS0 -s ODOMETRY -r 0
+mavlink stream -d /dev/ttyS0 -s SCALED_IMU -r 0
+mavlink stream -d /dev/ttyS0 -s SCALED_IMU2 -r 0
+mavlink stream -d /dev/ttyS0 -s SCALED_IMU3 -r 0
+mavlink stream -d /dev/ttyS0 -s SERVO_OUTPUT_RAW -r 0
+mavlink stream -d /dev/ttyS0 -s TIMESYNC -r 0
+mavlink stream -d /dev/ttyS0 -s VFR_HUD -r 0
+mavlink stream -d /dev/ttyS0 -s LANDING_TARGET -r 1000
+mavlink stream -d /dev/ttyS0 -s ATTITUDE_QUATERNION -r 0
+mavlink stream -d /dev/ttyS0 -s ACTUAT0R_CONTROL_TARGET -r 0
+mavlink stream -d /dev/ttyS0 -s DISTANCE_SENSOR -r 1000

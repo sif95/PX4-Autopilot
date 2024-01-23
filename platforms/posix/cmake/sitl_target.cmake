@@ -158,6 +158,7 @@ set(models
 	iris_opt_flow_mockup
 	iris_rplidar
 	iris_vision
+	nimbus_mesher
 	nxp_cupcar
 	plane
 	plane_cam
