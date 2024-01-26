@@ -1511,6 +1511,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("HOME_POSITION", 0.5f);
 		configure_stream_local("HYGROMETER_SENSOR", 0.1f);
 		configure_stream_local("LOCAL_POSITION_NED", 1.0f);
+		configure_stream_local("LANDING_TARGET", 1.0f);
 		configure_stream_local("NAV_CONTROLLER_OUTPUT", 1.0f);
 		configure_stream_local("OBSTACLE_DISTANCE", 1.0f);
 		configure_stream_local("ORBIT_EXECUTION_STATUS", 2.0f);
@@ -1542,6 +1543,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("CAMERA_TRIGGER", unlimited_rate);
 		configure_stream_local("HIGHRES_IMU", 50.0f);
 		configure_stream_local("LOCAL_POSITION_NED", 30.0f);
+		configure_stream_local("LANDING_TARGET", 30.0f);
 		configure_stream_local("ATTITUDE", 100.0f);
 		configure_stream_local("ALTITUDE", 10.0f);
 		configure_stream_local("DISTANCE_SENSOR", 10.0f);
@@ -1613,6 +1615,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("TIMESYNC", 10.0f);
 		configure_stream_local("CAMERA_TRIGGER", unlimited_rate);
 		configure_stream_local("LOCAL_POSITION_NED", 30.0f);
+		configure_stream_local("LANDING_TARGET", 30.0f);
 		configure_stream_local("ATTITUDE", 20.0f);
 		configure_stream_local("ALTITUDE", 10.0f);
 		configure_stream_local("DISTANCE_SENSOR", 10.0f);
@@ -1690,6 +1693,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("TIMESYNC", 10.0f);
 		configure_stream_local("CAMERA_TRIGGER", unlimited_rate);
 		configure_stream_local("LOCAL_POSITION_NED", 30.0f);
+		configure_stream_local("LANDING_TARGET", 30.0f);
 		configure_stream_local("DISTANCE_SENSOR", 10.0f);
 		configure_stream_local("MOUNT_ORIENTATION", 10.0f);
 		configure_stream_local("ODOMETRY", 30.0f);
@@ -1774,6 +1778,7 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("TIMESYNC", 10.0f);
 		configure_stream_local("CAMERA_TRIGGER", unlimited_rate);
 		configure_stream_local("LOCAL_POSITION_NED", 30.0f);
+		configure_stream_local("LANDING_TARGET", 30.0f);
 		configure_stream_local("ATTITUDE", 20.0f);
 		configure_stream_local("ALTITUDE", 10.0f);
 		configure_stream_local("DISTANCE_SENSOR", 10.0f);

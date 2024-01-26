@@ -214,7 +214,7 @@ void LandingTargetEstimator::_update_topics()
 	if (_irlockReportSub.update(&_irlockReport)) { //
 		_new_irlockReport = true;
 
-		if (!_vehicleAttitude_valid || !_vehicleLocalPosition_valid || !_vehicleLocalPosition.dist_bottom_valid) {
+		if (!_vehicleAttitude_valid || !_vehicleLocalPosition_valid){ // || !_vehicleLocalPosition.dist_bottom_valid) {
 			// don't have the data needed for an update
 			return;
 		}
@@ -243,6 +243,7 @@ void LandingTargetEstimator::_update_topics()
 		}
 
 		_dist_z = _vehicleLocalPosition.dist_bottom - _params.offset_z;
+		// _dist_z = -_vehicleLocalPosition.z - (float)(0.8); // To account for the landing bay height (Gazebo simulations)
 
 		// scale the ray s.t. the z component has length of _uncertainty_scale
 		_target_position_report.timestamp = _irlockReport.timestamp;
@@ -256,30 +257,30 @@ void LandingTargetEstimator::_update_topics()
 
 		_new_sensorReport = true;
 
-	} else if (_uwbDistanceSub.update(&_uwbDistance)) {
-		if (!_vehicleAttitude_valid || !_vehicleLocalPosition_valid) {
-			// don't have the data needed for an update
-			PX4_INFO("Attitude: %d, Local pos: %d", _vehicleAttitude_valid, _vehicleLocalPosition_valid);
-			return;
-		}
+	} //else if (_uwbDistanceSub.update(&_uwbDistance)) {
+	// 	if (!_vehicleAttitude_valid || !_vehicleLocalPosition_valid) {
+	// 		// don't have the data needed for an update
+	// 		PX4_INFO("Attitude: %d, Local pos: %d", _vehicleAttitude_valid, _vehicleLocalPosition_valid);
+	// 		return;
+	// 	}
 
-		if (!PX4_ISFINITE((float)_uwbDistance.position[0]) || !PX4_ISFINITE((float)_uwbDistance.position[1]) ||
-		    !PX4_ISFINITE((float)_uwbDistance.position[2])) {
-			PX4_WARN("Position is corrupt!");
-			return;
-		}
+	// 	if (!PX4_ISFINITE((float)_uwbDistance.position[0]) || !PX4_ISFINITE((float)_uwbDistance.position[1]) ||
+	// 	    !PX4_ISFINITE((float)_uwbDistance.position[2])) {
+	// 		PX4_WARN("Position is corrupt!");
+	// 		return;
+	// 	}
 
-		_new_sensorReport = true;
+	// 	_new_sensorReport = true;
 
-		// The coordinate system is NED (north-east-down)
-		// the uwb_distance msg contains the Position in NED, Vehicle relative to LP
-		// The coordinates "rel_pos_*" are the position of the landing point relative to the vehicle.
-		// To change POV we negate every Axis:
-		_target_position_report.timestamp = _uwbDistance.timestamp;
-		_target_position_report.rel_pos_x = -_uwbDistance.position[0];
-		_target_position_report.rel_pos_y = -_uwbDistance.position[1];
-		_target_position_report.rel_pos_z = -_uwbDistance.position[2];
-	}
+	// 	// The coordinate system is NED (north-east-down)
+	// 	// the uwb_distance msg contains the Position in NED, Vehicle relative to LP
+	// 	// The coordinates "rel_pos_*" are the position of the landing point relative to the vehicle.
+	// 	// To change POV we negate every Axis:
+	// 	_target_position_report.timestamp = _uwbDistance.timestamp;
+	// 	_target_position_report.rel_pos_x = -_uwbDistance.position[0];
+	// 	_target_position_report.rel_pos_y = -_uwbDistance.position[1];
+	// 	_target_position_report.rel_pos_z = -_uwbDistance.position[2];
+	// }
 }
 
 void LandingTargetEstimator::_update_params()
